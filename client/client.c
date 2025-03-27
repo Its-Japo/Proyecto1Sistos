@@ -211,7 +211,7 @@ static int callback_client(struct lws *wsi, enum lws_callback_reasons reason,
 
 // Definición del protocolo para el cliente
 static struct lws_protocols protocols[] = {
-    { "chat", callback_client, 0, BUFFER_SIZE },
+    { "chat-protocol", callback_client, 0, BUFFER_SIZE },
     { NULL, NULL, 0, 0 }
 };
 
