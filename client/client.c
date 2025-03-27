@@ -106,13 +106,25 @@ static int callback_client(struct lws *wsi, enum lws_callback_reasons reason,
                     if (strcmp(type->valuestring, "broadcast") == 0) {
                         const cJSON *sender = cJSON_GetObjectItemCaseSensitive(json, "sender");
                         const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
-                        printf("%s [Broadcast] [%s]: %s\n", time_str, sender->valuestring, content->valuestring);
+                        const cJSON *msg_timestamp = cJSON_GetObjectItemCaseSensitive(json, "timestamp");
+                        if (msg_timestamp && cJSON_IsString(msg_timestamp)) {
+                            // Se muestra el timestamp del mensaje enviado (del campo "timestamp" del JSON)
+                            printf("%s [Broadcast] [%s] at [%s]: %s\n", time_str, sender->valuestring, msg_timestamp->valuestring, content->valuestring);
+                        } else {
+                            // En caso de no recibir el timestamp, se muestra sin él
+                            printf("%s [Broadcast] [%s]: %s\n", time_str, sender->valuestring, content->valuestring);
+                        }
                     }
                     else if (strcmp(type->valuestring, "private") == 0) {
                         const cJSON *sender = cJSON_GetObjectItemCaseSensitive(json, "sender");
                         const cJSON *target = cJSON_GetObjectItemCaseSensitive(json, "target");
                         const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
-                        printf("%s [Privado] [%s] → [%s]: %s\n", time_str, sender->valuestring, target->valuestring, content->valuestring);
+                        const cJSON *msg_timestamp = cJSON_GetObjectItemCaseSensitive(json, "timestamp");
+                        if (msg_timestamp && cJSON_IsString(msg_timestamp)) {
+                            printf("%s [Privado] [%s] → [%s] at [%s]: %s\n", time_str, sender->valuestring, target->valuestring, msg_timestamp->valuestring, content->valuestring);
+                        } else {
+                            printf("%s [Privado] [%s] → [%s]: %s\n", time_str, sender->valuestring, target->valuestring, content->valuestring);
+                        }
                     }
                     else if (strcmp(type->valuestring, "status_update") == 0) {
                         const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
