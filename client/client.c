@@ -92,9 +92,83 @@ static int callback_client(struct lws *wsi, enum lws_callback_reasons reason,
             break;
         }
         case LWS_CALLBACK_CLIENT_RECEIVE: {
-            printf("Mensaje recibido: %s\n", (char*)in);
+            char *data = (char *)in;
+            // Obtener la hora local (hora y minuto)
+            time_t now = time(NULL);
+            struct tm *t = localtime(&now);
+            char time_str[16];
+            strftime(time_str, sizeof(time_str), "[%H:%M]", t);
+
+            cJSON *json = cJSON_Parse(data);
+            if (json) {
+                const cJSON *type = cJSON_GetObjectItemCaseSensitive(json, "type");
+                if (cJSON_IsString(type) && (type->valuestring != NULL)) {
+                    if (strcmp(type->valuestring, "broadcast") == 0) {
+                        const cJSON *sender = cJSON_GetObjectItemCaseSensitive(json, "sender");
+                        const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
+                        printf("%s [Broadcast] [%s]: %s\n", time_str, sender->valuestring, content->valuestring);
+                    }
+                    else if (strcmp(type->valuestring, "private") == 0) {
+                        const cJSON *sender = cJSON_GetObjectItemCaseSensitive(json, "sender");
+                        const cJSON *target = cJSON_GetObjectItemCaseSensitive(json, "target");
+                        const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
+                        printf("%s [Privado] [%s] → [%s]: %s\n", time_str, sender->valuestring, target->valuestring, content->valuestring);
+                    }
+                    else if (strcmp(type->valuestring, "status_update") == 0) {
+                        const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
+                        const cJSON *user = cJSON_GetObjectItemCaseSensitive(content, "user");
+                        const cJSON *status = cJSON_GetObjectItemCaseSensitive(content, "status");
+                        printf("%s [Estado] [%s] cambió su estado a %s\n", time_str, user->valuestring, status->valuestring);
+                    }
+                    else if (strcmp(type->valuestring, "list_users_response") == 0) {
+                        const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
+                        printf("%s [Usuarios Conectados]: ", time_str);
+                        int size = cJSON_GetArraySize(content);
+                        for (int i = 0; i < size; i++) {
+                            cJSON *item = cJSON_GetArrayItem(content, i);
+                            if (item && cJSON_IsString(item)) {
+                                printf("%s ", item->valuestring);
+                            }
+                        }
+                        printf("\n");
+                    }
+                    else if (strcmp(type->valuestring, "user_info_response") == 0) {
+                        const cJSON *target = cJSON_GetObjectItemCaseSensitive(json, "target");
+                        const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
+                        const cJSON *ip = cJSON_GetObjectItemCaseSensitive(content, "ip");
+                        const cJSON *status = cJSON_GetObjectItemCaseSensitive(content, "status");
+                        printf("%s [Info] [Usuario]: %s, [IP]: %s, [Estado]: %s\n", time_str, target->valuestring, ip->valuestring, status->valuestring);
+                    }
+                    else if (strcmp(type->valuestring, "register_success") == 0) {
+                        const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
+                        printf("%s [Registro] %s\n", time_str, content->valuestring);
+                    }
+                    else if (strcmp(type->valuestring, "user_connected") == 0) {
+                        const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
+                        printf("%s [Conexión] Usuario %s se ha conectado.\n", time_str, content->valuestring);
+                    }
+                    else if (strcmp(type->valuestring, "user_disconnected") == 0) {
+                        const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
+                        printf("%s [Desconexión] %s\n", time_str, content->valuestring);
+                    }
+                    else if (strcmp(type->valuestring, "error") == 0) {
+                        const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
+                        printf("%s [Error] %s\n", time_str, content->valuestring);
+                    }
+                    else {
+                        // Si se recibe un tipo no reconocido, se muestra el mensaje completo.
+                        printf("%s [Mensaje] %s\n", time_str, data);
+                    }
+                } else {
+                    printf("%s Mensaje recibido (formato desconocido): %s\n", time_str, data);
+                }
+                cJSON_Delete(json);
+            } else {
+                printf("%s Mensaje recibido: %s\n", time_str, data);
+            }
             break;
         }
+
         case LWS_CALLBACK_CLIENT_WRITEABLE: {
             pthread_mutex_lock(&msg_queue_mutex);
             if (msg_queue_head) {
