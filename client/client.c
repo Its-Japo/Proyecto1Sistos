@@ -106,14 +106,7 @@ static int callback_client(struct lws *wsi, enum lws_callback_reasons reason,
                     if (strcmp(type->valuestring, "broadcast") == 0) {
                         const cJSON *sender = cJSON_GetObjectItemCaseSensitive(json, "sender");
                         const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
-                        const cJSON *msg_timestamp = cJSON_GetObjectItemCaseSensitive(json, "timestamp");
-                        if (msg_timestamp && cJSON_IsString(msg_timestamp)) {
-                            // Se muestra el timestamp del mensaje enviado (del campo "timestamp" del JSON)
-                            printf("%s [Broadcast] [%s] at [%s]: %s\n", time_str, sender->valuestring, msg_timestamp->valuestring, content->valuestring);
-                        } else {
-                            // En caso de no recibir el timestamp, se muestra sin él
-                            printf("%s [Broadcast] [%s]: %s\n", time_str, sender->valuestring, content->valuestring);
-                        }
+                        printf("%s [Broadcast] [%s]: %s\n", time_str, sender->valuestring, content->valuestring);
                     }
                     else if (strcmp(type->valuestring, "private") == 0) {
                         const cJSON *sender = cJSON_GetObjectItemCaseSensitive(json, "sender");
