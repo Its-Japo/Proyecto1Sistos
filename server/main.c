@@ -521,7 +521,7 @@ static void *inactivity_check(void *arg) {
 }
 
 static struct lws_protocols protocols[] = {
-    {"chat", callback_chat, sizeof(User), 0}, {NULL, NULL, 0, 0}};
+    {"chat-protocol", callback_chat, sizeof(User), 0}, {NULL, NULL, 0, 0}};
 
 int main(int argc, char *argv[]) {
   if (argc != 2) {
