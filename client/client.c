@@ -134,12 +134,19 @@ static int callback_client(struct lws *wsi, enum lws_callback_reasons reason,
                     else if (strcmp(type->valuestring, "list_users_response") == 0) {
                         const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
                         printf("%s [Usuarios Conectados]: ", time_str);
-                        int size = cJSON_GetArraySize(content);
-                        for (int i = 0; i < size; i++) {
-                            cJSON *item = cJSON_GetArrayItem(content, i);
-                            if (item && cJSON_IsString(item)) {
-                                printf("%s ", item->valuestring);
+                        if (cJSON_IsArray(content)) {
+                            int size = cJSON_GetArraySize(content);
+                            for (int i = 0; i < size; i++) {
+                                cJSON *item = cJSON_GetArrayItem(content, i);
+                                if (item && cJSON_IsString(item)) {
+                                    printf("%s ", item->valuestring);
+                                }
                             }
+                        } else if (cJSON_IsString(content)) {
+                            // En caso de que el servidor envíe un string en lugar de un arreglo.
+                            printf("%s", content->valuestring);
+                        } else {
+                            printf("Formato desconocido.");
                         }
                         printf("\n");
                     }
