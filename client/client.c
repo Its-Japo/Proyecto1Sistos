@@ -119,12 +119,7 @@ static int callback_client(struct lws *wsi, enum lws_callback_reasons reason,
                         const cJSON *sender = cJSON_GetObjectItemCaseSensitive(json, "sender");
                         const cJSON *target = cJSON_GetObjectItemCaseSensitive(json, "target");
                         const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
-                        const cJSON *msg_timestamp = cJSON_GetObjectItemCaseSensitive(json, "timestamp");
-                        if (msg_timestamp && cJSON_IsString(msg_timestamp)) {
-                            printf("%s [Privado] [%s] → [%s] at [%s]: %s\n", time_str, sender->valuestring, target->valuestring, msg_timestamp->valuestring, content->valuestring);
-                        } else {
-                            printf("%s [Privado] [%s] → [%s]: %s\n", time_str, sender->valuestring, target->valuestring, content->valuestring);
-                        }
+                        printf("%s [Privado] [%s] → [%s]: %s\n", time_str, sender->valuestring, target->valuestring, content->valuestring);
                     }
                     else if (strcmp(type->valuestring, "status_update") == 0) {
                         const cJSON *content = cJSON_GetObjectItemCaseSensitive(json, "content");
