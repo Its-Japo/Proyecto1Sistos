@@ -25,7 +25,7 @@
 #include <libwebsockets.h>
 #include <cjson/cJSON.h>
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 2048
 
 // Variables globales
 char *global_username = NULL;
@@ -57,14 +57,14 @@ void queue_message(const char *msg) {
     Message *m = malloc(sizeof(Message));
     m->data = strdup(msg);
     m->next = NULL;
-    pthread_mutex_lock(&msg_queue_mutex);
+    //pthread_mutex_lock(&msg_queue_mutex);
     if (!msg_queue_tail) {
         msg_queue_head = msg_queue_tail = m;
     } else {
         msg_queue_tail->next = m;
         msg_queue_tail = m;
     }
-    pthread_mutex_unlock(&msg_queue_mutex);
+    //pthread_mutex_unlock(&msg_queue_mutex);
     // Solicita al WS que se active el callback de escritura
     if (client_wsi)
          lws_callback_on_writable(client_wsi);
@@ -188,7 +188,7 @@ static int callback_client(struct lws *wsi, enum lws_callback_reasons reason,
         }
 
         case LWS_CALLBACK_CLIENT_WRITEABLE: {
-            pthread_mutex_lock(&msg_queue_mutex);
+            //pthread_mutex_lock(&msg_queue_mutex);
             if (msg_queue_head) {
                 size_t msg_len = strlen(msg_queue_head->data);
                 // Reservar espacio extra LWS_PRE
@@ -206,13 +206,13 @@ static int callback_client(struct lws *wsi, enum lws_callback_reasons reason,
                 free(old->data);
                 free(old);
             }
-            pthread_mutex_unlock(&msg_queue_mutex);
+            //pthread_mutex_unlock(&msg_queue_mutex);
             // Si hay más mensajes en cola, solicitar otro callback
-            pthread_mutex_lock(&msg_queue_mutex);
+            //pthread_mutex_lock(&msg_queue_mutex);
             if (msg_queue_head) {
                 lws_callback_on_writable(wsi);
             }
-            pthread_mutex_unlock(&msg_queue_mutex);
+            //pthread_mutex_unlock(&msg_queue_mutex);
             break;
         }
         case LWS_CALLBACK_CLOSED: {
@@ -401,7 +401,7 @@ int main(int argc, char **argv) {
 
     // Bucle principal del servicio WebSocket
     while (!should_exit) {
-        lws_service(context, 50);
+        lws_service(context, 1);
     }
 
     pthread_join(tid, NULL);
